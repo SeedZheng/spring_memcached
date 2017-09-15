@@ -38,7 +38,7 @@ public class JunitTest {
 
 	@Test
 	public void queryUser(){
-		userService.queryUser();
+		userService.queryUser("aa");
 	}
 	
 	@Test

@@ -3,6 +3,8 @@ package com.test.utils;
 import org.apache.ibatis.cache.Cache;
 import org.mybatis.caches.memcached.StringUtils;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
@@ -33,42 +35,23 @@ public final class Mycache implements Cache{
         synchronized (Mycache.class){
             if(null==key)
                 throw new RuntimeException("key 不能为空");
-            String keyString=toKeyString(key);
-            //Object ret;
-           // if(keys.contains(keyString)){
-                //已经存在，覆盖前面的数据
-                memcachedUtils.set(keyString,value);
-          //  }else{
-           //     keys.add(keyString);
-             //   memcachedUtils.add(keyString,value);
-           // }
+            memcachedUtils.putObject(key,value,this.id);
+
         }
 
     }
 
     public Object getObject(Object key) {
-        String k=toKeyString(key);
-        //if(keys.contains(k)){
-           return memcachedUtils.get(k);
-      //  }else
-       //     return null;
+        return memcachedUtils.get(key);
     }
 
     public Object removeObject(Object key) {
-        String keyString= toKeyString(key);
-        Object obj=getObject(keyString);
-        boolean isDelete=false;
-        if(null!=obj)
-            isDelete=memcachedUtils.delete(key+"");
-        if(isDelete){
-          //  keys.remove(keyString);
-            return obj;
-        }else
-            return null;
+        memcachedUtils.remove(key);
+        return null;
     }
 
     public void clear() {
-        memcachedUtils.flushAll();
+        memcachedUtils.clear(this.id);
     }
 
     public int getSize() {
@@ -80,11 +63,7 @@ public final class Mycache implements Cache{
     }
 
 
-    private String toKeyString(Object obj){
-        if(null==obj)
-            return "";
-        String key=StringUtils.sha1Hex(obj.toString());
-        return key;
-    }
 
 }
+
+

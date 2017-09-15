@@ -9,11 +9,12 @@
     </settings>
     <typeAliases>
     	<typeAlias type="com.test.bean.User" alias="User"/>
+        <typeAlias type="com.test.bean.Money" alias="Money"/>
         <!--<package name="com.test.bean"/>-->
     </typeAliases>
     <mappers>
-    	<mapper resource="mybatis/IUserDao.xml"/>
-    	<mapper resource="mybatis/IMoneyDao.xml"/>
+    	<mapper resource="mybatis/UserMapper.xml"/>
+    	<mapper resource="mybatis/MoneyMapper.xml"/>
         <!--<package name="com.test.mapper"/>-->
     </mappers>
 </configuration>

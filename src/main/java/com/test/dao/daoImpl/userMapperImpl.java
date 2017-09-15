@@ -1,6 +1,7 @@
-package com.test.dao;
+package com.test.dao.daoImpl;
 
 import com.test.bean.User;
+import com.test.dao.UserMapper;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Repository("userDao")
-public class DaoSupport implements IUserDao {
+public class userMapperImpl implements UserMapper {
 	
 	@Resource(name = "sqlSession")
 	private SqlSessionTemplate sqlSession;
@@ -18,7 +19,7 @@ public class DaoSupport implements IUserDao {
 	@Override
 	public User getUser(String name) {
 		System.out.println("方法执行到了这里");
-		User user=sqlSession.selectOne("IUserDao.getUser",name);
+		User user=sqlSession.selectOne("UserMapper.getUser",name);
 		return user;
 	}
 
@@ -47,7 +48,7 @@ public class DaoSupport implements IUserDao {
 		Map param=new HashMap();
 		param.put("name",name);
 		param.put("gender",gender);
-		sqlSession.update("IUserDao.upUserByName",param);
+		sqlSession.update("UserMapper.upUserByName",param);
 	}
 
 }

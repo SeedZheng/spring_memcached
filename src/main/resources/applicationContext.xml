@@ -144,13 +144,13 @@
     
     <!-- 配置映射器 -->  
 <!--     <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">  
-        <property name="mapperInterface" value="com.test.dao.IUserDao" />  
+        <property name="mapperInterface" value="com.test.dao.UserMapperrMapper
         <property name="sqlSessionFactory" ref="sqlSessionFactory" />  
     </bean>   -->
     
     
      <!-- 为业务逻辑层注入数据的对象 -->  
-  <!--  <bean id="userServer" class="com.test.server.UserServerImpl">  
+  <!--  <bean id="userServer" class="com.test.server.serviceImpl.UserServerImpl">
         <property name="userDao" ref="userMapper"></property>  
         <property name="memcachedClient" ref="memcachedClient"></property>  
     </bean>  

@@ -1,8 +1,9 @@
-package com.test.server;
+package com.test.server.serviceImpl;
 
 
 import com.test.bean.User;
-import com.test.dao.DaoSupport;
+import com.test.dao.daoImpl.userMapperImpl;
+import com.test.server.IUserServer;
 import com.test.utils.MemcachedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,10 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 
 @Service("server")
-public class UserServerImpl implements IUserServer  
+public class UserServerImpl implements IUserServer
 {  
 	@Autowired
-    private DaoSupport userDao;
+    private userMapperImpl userDao;
 	
 	 MemcachedUtils memcachedUtils;
 
@@ -32,14 +33,14 @@ public class UserServerImpl implements IUserServer
         else  
         {  
             user = userDao.getUser(userName);  
-            this.memcachedUtils.add("user",user,new Date(100));  
+            //this.memcachedUtils.add("user",user,new Date(100));
             System.out.println("本次操作是在数据库中查询数据...");  
         }  
         return user;  
     }
     @Override
-    public User queryUser(){
-        User user=userDao.getUser("aa");
+    public User queryUser(String name){
+        User user=userDao.getUser(name);
         //User user2=userDao.getUser("aa");
         System.out.println(user);
         return user;

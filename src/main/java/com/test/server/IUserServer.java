@@ -12,7 +12,7 @@ public interface IUserServer
 
     public void fluahAll();
 
-    public User queryUser();
+    public User queryUser(String name);
 
     void upUser(String name, String gender);
 

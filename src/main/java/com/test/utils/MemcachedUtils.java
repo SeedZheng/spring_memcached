@@ -2,6 +2,7 @@ package com.test.utils;
 
 import com.danga.MemCached.MemCachedClient;
 import org.apache.log4j.Logger;
+import org.mybatis.caches.memcached.StringUtils;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -12,15 +13,17 @@ import java.util.*;
 public class MemcachedUtils
 {  
     private static final Logger logger = Logger.getLogger(MemcachedUtils.class);
-    private static MemCachedClient cachedClient;  
-    /*static
-    {  synchronized (MemcachedUtils.class){
-        if (cachedClient == null)
-            cachedClient = new MemCachedClient("memcachedPool");
-        System.out.println("cachedClient==="+cachedClient);
+    private static MemCachedClient cachedClient;
+    private static final String prefix="_mybatis_";
+
+
+    private static String toKeyString(Object obj){
+        if(null==obj)
+            return "";
+        String key=prefix+ StringUtils.sha1Hex(obj.toString());
+        return key;
     }
 
-    }*/
   
     public MemcachedUtils()
     {
@@ -35,6 +38,70 @@ public class MemcachedUtils
 
 
     /**
+     *
+     * @param key
+     * @param value
+     * @param id  namespace的ID
+     */
+    public static void putObject(Object key,Object value,String id){
+        String keyString=toKeyString(key);
+        String groupKeyString=toKeyString(id);
+        set(keyString,value);//存储
+        Group group=getGroup(groupKeyString);
+        //group中的对象
+        Set<String> groupValue;
+        if(group.getValue()==null){
+            groupValue=new HashSet<>();
+            groupValue.add(keyString);  //将已经存储入缓存的对象的KEY存入那么namespace对应的组中
+        }else{
+            groupValue=group.getValue();
+            groupValue.add(keyString);
+        }
+        set(groupKeyString,groupValue);
+    }
+
+    /**
+     *
+     * @param id namespace的ID
+     */
+    public static void clear(String id){
+        String groupKeyString=toKeyString(id);
+        Group group=getGroup(groupKeyString);
+        if(group.getValue()!=null){
+            Set<String> keySet=group.getValue();
+            for(String k:keySet){
+                delete(k);
+            }
+            delete(groupKeyString);
+        }
+    }
+
+    public static void remove(Object key){
+        String keyString =toKeyString(key);
+        delete(keyString);
+    }
+
+    public static Object get(Object key){
+        String keyString=toKeyString(key);
+        Object o=get(keyString);
+        return o;
+    }
+
+    private static Group getGroup(String groupKeyString){
+        Group group;
+        Object tempValue=get(groupKeyString);
+        if(null==tempValue){
+            //还不存在该组信息
+            group=new Group(groupKeyString);
+        }else{
+            Set<String> set= (Set<String>) tempValue;
+            group=new Group(groupKeyString,set);
+        }
+        return group;
+    }
+
+
+    /**
      * 仅当缓存中不存在键时，add 命令才会向缓存中添加一个键值对。
      *
      * @param key
@@ -43,7 +110,7 @@ public class MemcachedUtils
      *            值
      * @return
      */
-    public static boolean add(String key, Object value)
+    private static boolean add(String key, Object value)
     {
         return addExp(key, value, null);
     }
@@ -59,7 +126,7 @@ public class MemcachedUtils
      *            过期时间 New Date(1000*10)：十秒后过期
      * @return
      */
-    public static boolean add(String key, Object value, Date expire)
+    private static boolean add(String key, Object value, Date expire)
     {
         return addExp(key, value, expire);
     }
@@ -68,13 +135,11 @@ public class MemcachedUtils
     /**
      * 仅当键已经存在时，replace 命令才会替换缓存中的键，如果不存在，则什么也不会做
      *
-     * @param key
-     *            键
-     * @param value
-     *            值
+     * @param key 键
+     * @param value 值
      * @return
      */
-    public static boolean replace(String key, Object value)
+    private static boolean replace(String key, Object value)
     {
         return replaceExp(key, value, null);
     }
@@ -82,15 +147,12 @@ public class MemcachedUtils
     /**
      * 仅当键已经存在时，replace 命令才会替换缓存中的键，如果不存在，则什么也不会做
      *
-     * @param key
-     *            键
-     * @param value
-     *            值
-     * @param expire
-     *            过期时间 New Date(1000*10)：十秒后过期
+     * @param key 键
+     * @param value 值
+     * @param expire 过期时间 New Date(1000*10)：十秒后过期
      * @return
      */
-    public static boolean replace(String key, Object value, Date expire)
+    private static boolean replace(String key, Object value, Date expire)
     {
         return replaceExp(key, value, expire);
     }
@@ -125,7 +187,7 @@ public class MemcachedUtils
      *            键
      * @return
      */
-    public static boolean delete(String key)
+    private static boolean delete(String key)
     {
         return deleteExp(key, null);
     }
@@ -139,7 +201,7 @@ public class MemcachedUtils
      *            过期时间 New Date(1000*10)：十秒后过期
      * @return
      */
-    public static boolean delete(String key, Date expire)
+    private static boolean delete(String key, Date expire)
     {
         return deleteExp(key, expire);
     }
@@ -149,7 +211,7 @@ public class MemcachedUtils
      *
      * @return
      */
-    public static boolean flushAll()
+    private static boolean flushAll()
     {
         boolean flag = false;
         try
@@ -166,7 +228,7 @@ public class MemcachedUtils
     /**
      *   flush_all 实际上没有立即释放项目所占用的内存，而是在随后陆续有新的项目被储存时执行（这是由memcached的懒惰检测和删除机制决定的）
      */
-    public static void getAll(){
+    private static void getAll(){
         Map<String, Map<String,String>> slabs=cachedClient.statsItems();
         Iterator<String> keySet =slabs.keySet().iterator();
         Map<String,String> secondMap=new HashMap<>();
@@ -203,7 +265,7 @@ public class MemcachedUtils
      *            值 
      * @return 
      */
-    public static boolean set(String key, Object value)
+    private static boolean set(String key, Object value)
     {  
         return setExp(key, value, null);  
     }  
@@ -219,7 +281,7 @@ public class MemcachedUtils
      *            过期时间 New Date(1000*10)：十秒后过期 
      * @return 
      */
-    public static boolean set(String key, Object value, Date expire)
+    private static boolean set(String key, Object value, Date expire)
     {  
         return setExp(key, value, expire);  
     }  
@@ -341,7 +403,10 @@ public class MemcachedUtils
         e.printStackTrace(pw);  
         pw.flush();  
         return sw.toString();  
-    }  
+    }
+
+
+
   
     /** 
      *  
@@ -421,6 +486,40 @@ public class MemcachedUtils
                 logger.error("memcached 日志对象关闭失败", e);  
             }  
         }  
-    } 
+    }
     
-}  
+}
+
+class Group{
+    private String key;
+    private Set<String> value;
+
+    public Group(String key) {
+        this.key = key;
+    }
+
+    public Group(String key, Set<String> value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        synchronized (Group.class){
+            this.key = key;
+        }
+    }
+
+    public Set<String> getValue() {
+        return value;
+    }
+
+    public void setValue(Set<String> value) {
+        synchronized (Group.class) {
+            this.value = value;
+        }
+    }
+}

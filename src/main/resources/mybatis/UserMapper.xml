@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>   
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!-- 务必配置正确namespace就是所映射的接口类-->   
-<mapper namespace="IUserDao">
+<mapper namespace="UserMapper">
     <cache type="com.test.utils.Mycache"/>
+    <!--引用第三方cache后，每次CUD后清空的不只是基于namesprce的缓存 而是执行了实现类中的clear操作-->
 <!-- resultType="User"这个使用的是配置文件里面的别名（配置文件为mybatis-config.xml） -->
     <select id="getUser" parameterType="string" resultType="User" useCache="true">
         select * from user where name=#{name}
     </select>
-    <update id="upUserByName" parameterType="Map" >
+    <update id="upUserByName" parameterType="Map" ><!--flushCache="false" 设置后不会执行flush命令-->
         UPDATE user set gender=#{gender} where name=#{name}
     </update>
 </mapper>   
