@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 务必配置正确namespace就是所映射的接口类-->
+<mapper namespace="IMoneyDao">
+    <!-- resultType="User"这个使用的是配置文件里面的别名（配置文件为mybatis-config.xml） -->
+    <update id="subMoney" parameterType="Map">
+        update test SET money=money-#{money} where id=#{id}
+    </update>
+
+    <update id="addMoney" parameterType="Map" >
+        update test SET money=money+#{money} where id=#{id}
+    </update>
+
+    <select id="getDataByName" parameterType="" resultType="" useCache="true"></select>
+</mapper>
